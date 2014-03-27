@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="jquery.js"></script>
+    <script src="jquery.percentageloader-0.1.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0" />
+<title>无标题文档</title>
+<style type="text/css">
+*{
+  margin: 0;
+  padding: 0 ;
+  -webkit-tap-highlight-color:rgba(0,0,0,0);
+  outline: none;
+}
+.bg{
+  background:-webkit-gradient(linear, 0 0, 0 100%, color-stop(2%,rgba(13,26,52,2)), color-stop(8%,rgba(14,40,87,5)), color-stop(55%,rgba(7,50,128,13)), color-stop(100%,rgba(5,15,33,1)));
+  position: relative;
+}
+.ray{
+  background: url(images/ray.png) no-repeat center center;
+  backgrouond-size: 100% 100%;
+  padding-top: 47px;
+  padding-bottom: 178px;
+}
+header{
+  background: url(images/intro.png) no-repeat;
+  background-size: 100% 100%;
+  margin: 0 auto 52px;
+  width: 540px;
+  height: 114px;
+  text-indent: -999em;
+}
+.circle{
+  background: url(images/circle.png) no-repeat;
+  background-size: 100% 100%;
+  width: 497px;
+  height: 385px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+.progress-box{
+  position: absolute;
+  display: none;
+  left: 36px;
+  bottom: 90px;
+  overflow: hidden;
+  width: 40px;
+}
+.progress{
+  background: url(images/percent.png) no-repeat;
+  background-size: 100% 100%;
+  width: 416px;
+  height: 262px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+.btnspeed{
+  width: 503px;
+  height: 125px;
+  background: transparent url(images/btnspeed.png) no-repeat;
+  background-size: 100% 100%;
+  margin: 57px auto 0;
+  text-indent: -999em;
+}
+@media all and (max-width: 640px){
+  header{    
+    width: 480px;
+    height: 101px;
+  }
+  .circle{    
+    width: 442px;
+    height: 342px;
+  }  
+  .progress-box{
+    left: 33px;
+    bottom: 80px;
+    width: 36px;
+  }
+  .progress{      
+    width: 370px;
+    height: 233px;
+  }
+  .btnspeed{
+    width: 448px;
+    height: 112px;
+  }
+}
+@media all and (max-width: 480px){
+  header{    
+    width: 300px;
+    height: 63px;
+  }
+  .circle{    
+    width: 331px;
+    height: 257px;
+  }     
+  .progress-box{
+    left: 25px;
+    bottom: 60px;
+    width: 27px;
+  }
+  .progress{      
+    width: 277px;
+    height: 174px;
+  }
+  .btnspeed{
+    width: 335px;
+    height: 83px;
+  }
+}
+@media all and (max-width: 320px){
+  header{    
+    width: 240px;
+    height: 50px;
+  }
+  .circle{    
+    width: 221px;
+    height: 171px;
+  }      
+  .progress-box{
+    left: 16px;
+    bottom: 41px;
+    width: 18px;
+  }
+  .progress{      
+    width: 185px;
+    height: 116px;
+  }
+  .btnspeed{
+    width: 224px;
+    height: 56px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="ray">
+    <header>节约流量加速器</header>
+    <div class="circle" id="topLoader">
+    </div>
+    <div class="btnspeed" id="animateButton">马上加速</div>
+  </div>
+</div>
+<script type="text/javascript">
+ $(function() {
+          var $topLoader = $("#topLoader").percentageLoader({width: 490, height: 500, controllable : true, progress : 0, onProgressUpdate : function(val) {
+              $topLoader.setValue(Math.round(val * 100.0));
+            }});
+
+          var topLoaderRunning = false;
+          $("#animateButton").click(function() {
+            if (topLoaderRunning) {
+              return;
+            }
+            topLoaderRunning = true;
+            $topLoader.setProgress(0);
+            $topLoader.setValue('0kb');
+            var kb = 0;
+            var totalKb = 999;
+            
+            var animateFunc = function() {
+              kb += 17;
+              $topLoader.setProgress(kb / totalKb);
+              $topLoader.setValue(kb.toString() + 'kb');
+              
+              if (kb < totalKb) {
+                setTimeout(animateFunc, 25);
+              } else {
+                topLoaderRunning = false;
+              }
+            }
+            
+            setTimeout(animateFunc, 25);
+            
+          });
+        });   
+
+</script>
+</body>
+</html>
