@@ -16,11 +16,6 @@ see the file license.txt that was included with the plugin bundle.
     "use strict";
     /*jslint browser: true */
 
-    /* Our spiral gradient data */
-    var imgdata = "images/percent.png",
-        gradient = new Image();
-    gradient.src = imgdata;
-
     /** Percentage loader
      * @param	params	Specify options in {}. May be on of width, height, progress or value.
      *
@@ -32,10 +27,10 @@ see the file license.txt that was included with the plugin bundle.
 		});
      */
     $.fn.percentageLoader = function (params) {
-        var settings, canvas, percentageText, valueText, items, i, item, selectors, s, ctx, progress,
-            value, cX, cY, lingrad, innerGrad, tubeGrad, innerRadius, innerBarRadius, outerBarRadius,
+        var settings, canvas, percentageText, valueText, items, i, item, selectors, s, ctx, gradient, progress,
+            value, cX, cY, centrePoint, lingrad, innerGrad, tubeGrad, innerRadius, innerBarRadius, outerBarRadius,
             radius, startAngle, endAngle, counterClockwise, completeAngle, setProgress, setValue,
-            applyAngle, drawLoader, clipValue, outerDiv;
+            applyAngle, drawGradient, drawLoader, clipValue, outerDiv;
 
         /* Specify default settings */
         settings = {
@@ -43,7 +38,8 @@ see the file license.txt that was included with the plugin bundle.
             height: 256,
             progress: 0,
             value: '0kb',
-            controllable: false
+            controllable: false,
+						scrollable: false
         };
 
         /* Override default settings with provided params, if any */
@@ -102,18 +98,21 @@ see the file license.txt that was included with the plugin bundle.
         }
 
         /* Add the new dom elements to the containing div */
-       //outerDiv.appendChild(percentageText);
-       // outerDiv.appendChild(valueText);
+        outerDiv.appendChild(percentageText);
+        outerDiv.appendChild(valueText);
 
         /* Get a reference to the context of our canvas object */
         ctx = canvas.getContext("2d");
-
 
         /* Set various initial values */
 
         /* Centre point */
         cX = (canvas.width / 2) - 1;
         cY = (canvas.height / 2) - 1;
+				centrePoint = {
+						x : cX,
+						y : cY
+				};
 
         /* Create our linear gradient for the outer ring */
         lingrad = ctx.createLinearGradient(cX, 0, cX, canvas.height);
@@ -137,13 +136,13 @@ see the file license.txt that was included with the plugin bundle.
         radius = cX - 2;
 
         /* Calculate the radii of the inner tube */
-        innerBarRadius = 160;
-        outerBarRadius = 215;
+        innerBarRadius = innerRadius + (cX * 0.06);
+        outerBarRadius = radius - (cX * 0.06);
 
         /* Bottom left angle */
-        startAngle = 0.98*Math.PI;
+        startAngle = 2.1707963267949;
         /* Bottom right angle */
-        endAngle = 0.1 + (Math.PI * 2.0);
+        endAngle = 0.9707963267949 + (Math.PI * 2.0);
 
         /* Nicer to pass counterClockwise / clockwise into canvas functions
         * than true / false */
@@ -162,6 +161,15 @@ see the file license.txt that was included with the plugin bundle.
                 y : point.y + (Math.sin(angle) * distance)
             };
         };
+				
+				function hexToRgb(hex) {
+					var bigint = parseInt(hex.substr(0,1)=='#'?hex.substr(1):hex, 16);
+					var r = (bigint >> 16) & 255;
+					var g = (bigint >> 8) & 255;
+					var b = bigint & 255;
+
+					return {'r':r, 'g':g, 'b':b};
+				}
 
 
         /**
@@ -177,14 +185,14 @@ see the file license.txt that was included with the plugin bundle.
             ctx.fillStyle = lingrad;
             ctx.beginPath();
             ctx.strokeStyle = '#b2d5ed';
-          //  ctx.arc(cX, cY, radius, 0, Math.PI * 2, counterClockwise);
+            ctx.arc(cX, cY, radius, 0, Math.PI * 2, counterClockwise);
             ctx.fill();
             ctx.stroke();
 
             /* draw inner circle */
             ctx.fillStyle = innerGrad;
             ctx.beginPath();
-           // ctx.arc(cX, cY, innerRadius, 0, Math.PI * 2, counterClockwise);
+            ctx.arc(cX, cY, innerRadius, 0, Math.PI * 2, counterClockwise);
             ctx.fill();
             ctx.strokeStyle = '#b2d5edaa';
             ctx.stroke();
@@ -197,16 +205,12 @@ see the file license.txt that was included with the plugin bundle.
              * the background of the inner tube (which is always at 100%) and the
              * progress meter itself, which may vary from 0-100% */
             function makeInnerTubePath(startAngle, endAngle) {
-                var centrePoint, startPoint, controlAngle, capLength, c1, c2, point1, point2;
-                centrePoint = {
-                    x : cX,
-                    y : cY
-                };
+                var startPoint, controlAngle, capLength, c1, c2, point1, point2;
 
                 startPoint = applyAngle(centrePoint, startAngle, innerBarRadius);
-				
-                ctx.moveTo(startPoint.x, startPoint.y);
 
+                ctx.moveTo(startPoint.x, startPoint.y);
+								
                 point1 = applyAngle(centrePoint, endAngle, innerBarRadius);
                 point2 = applyAngle(centrePoint, endAngle, outerBarRadius);
 
@@ -234,10 +238,10 @@ see the file license.txt that was included with the plugin bundle.
 
             /* Background tube */
             ctx.beginPath();
-            ctx.strokeStyle = "transparent";
+            ctx.strokeStyle = '#bcd4e5';
             makeInnerTubePath(startAngle, endAngle);
 
-            ctx.fillStyle = "transparent";
+            ctx.fillStyle = tubeGrad;
             ctx.fill();
             ctx.stroke();
 
@@ -251,13 +255,13 @@ see the file license.txt that was included with the plugin bundle.
             ctx.save();
             /* Clip so we can apply the image gradient */
             ctx.clip();
-
-            /* Draw the spiral gradient over the clipped area */
-           ctx.drawImage(gradient, 36,32);
+						
+						/* Draw the spiral gradient over the clipped area */
+            ctx.drawImage(gradient, 0, 0, canvas.width, canvas.height);
 
             /* Undo the clip */
             ctx.restore();
-
+						
             /* Draw the outline of the path */
             ctx.beginPath();
             makeInnerTubePath(startAngle, completeAngle);
@@ -292,6 +296,62 @@ see the file license.txt that was included with the plugin bundle.
                 valueText.style.top = ((settings.height * 0.8333333) + (heightRemaining / 4)).toString() + 'px';
             }());
         };
+				
+				/**
+         * render the gradient.
+         */
+        drawGradient = function () {
+					gradient = document.createElement('canvas');
+					gradient.setAttribute('width', settings.width);
+					gradient.setAttribute('height', settings.height);
+					
+					var ctxg = gradient.getContext("2d");
+					
+					var distance = Math.sqrt( Math.pow(canvas.height/2,2) + Math.pow(canvas.width/2,2) );
+					
+					var progressColors = ['#fdb6a7', '#ffe8ae', '#b5f9b1'];
+					var progressColors = ['#3cfa32', '#ffc533', '#fc3232'];
+					//var progressColors = ['#FF0000', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF', '#FF0000'];
+					
+					
+					var progressColorsRGB = [];
+					for (var i=0; i<progressColors.length; i++){
+						progressColorsRGB[i]=hexToRgb(progressColors[i]);
+					}
+					
+					ctxg.lineWidth = 5;
+					
+					var angleStepSize = (endAngle-startAngle) / (progressColors.length-1);
+					
+					for (var angle=startAngle-0.2; angle<=endAngle+0.2; angle+=0.02){
+						
+						ctxg.beginPath();
+						
+						if (angle<startAngle){
+							ctxg.strokeStyle = progressColors[0];
+						}else if (angle>endAngle){
+							ctxg.strokeStyle = progressColors[progressColors.length-1];
+						}else{
+							
+							var currentAngleStep = Math.floor((angle-startAngle) / angleStepSize);
+							
+							var startColorRGB = progressColorsRGB[currentAngleStep];
+							var endColorRGB = progressColorsRGB[currentAngleStep+1];
+							
+							var pos = (angle-startAngle-(currentAngleStep*angleStepSize)) / angleStepSize;
+							
+							ctxg.strokeStyle = 'rgb('+
+								Math.round(startColorRGB.r + ( (endColorRGB.r - startColorRGB.r) * pos ))+','+
+								Math.round(startColorRGB.g + ( (endColorRGB.g - startColorRGB.g) * pos ))+','+
+								Math.round(startColorRGB.b + ( (endColorRGB.b - startColorRGB.b) * pos ))+')';
+						}
+						var point = applyAngle(centrePoint, angle, distance);
+						
+						ctxg.moveTo(cX, cY);
+						ctxg.lineTo(point.x, point.y);
+						ctxg.stroke();
+					}
+				};
 
         /**
         * Check the progress value and ensure it is within the correct bounds [0..1]
@@ -332,6 +392,7 @@ see the file license.txt that was included with the plugin bundle.
         clipValue();
 
         /* Do an initial draw */
+				drawGradient();
         drawLoader();
 
         /* In controllable mode, add event handlers */
@@ -393,6 +454,25 @@ see the file license.txt that was included with the plugin bundle.
                 }).mouseleave(function () {
                     mouseDown = false;
                 });
+								
+								if (params.scrollable === true) {
+									$(outerDiv).on('mousewheel', function (e) {
+										
+										var distance = getDistance(e.originalEvent.offsetX, e.originalEvent.offsetY);
+
+                    if (distance < radius) {
+                      
+											setProgress( progress + (e.originalEvent.wheelDelta/10000) );
+
+											if (params.onProgressUpdate) {
+													/* use the progress value as this will have been clipped
+													 * to the correct range [0..1] after the call to setProgress
+													 */
+													params.onProgressUpdate(progress);
+											}
+                    }										
+									});
+								}
             }());
         }
         return this;
